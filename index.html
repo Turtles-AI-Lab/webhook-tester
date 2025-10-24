@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Test webhooks easily. Generate curl commands, view payload examples, and debug webhook integrations.">
+    <title>Webhook Tester | Test & Debug Webhooks</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #48bb78;
+            --dark: #1a202c;
+            --gray: #4a5568;
+            --light: #f7fafc;
+        }
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: var(--dark);
+            color: white;
+        }
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 50px 20px;
+            text-align: center;
+        }
+        header h1 { font-size: 2.5rem; margin-bottom: 10px; }
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .section { background: #2d3748; padding: 30px; border-radius: 15px; margin-bottom: 30px; border: 2px solid #4a5568; }
+        h2 { color: var(--primary); margin-bottom: 20px; font-size: 1.8rem; }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #e2e8f0; }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            background: var(--dark);
+            border: 2px solid #4a5568;
+            color: white;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        button {
+            padding: 12px 30px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-right: 10px;
+        }
+        button:hover { background: var(--secondary); transform: translateY(-2px); }
+        .code-block {
+            background: var(--dark);
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #4a5568;
+            overflow-x: auto;
+            position: relative;
+        }
+        .code-block pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 8px 15px;
+            font-size: 0.85rem;
+        }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab {
+            padding: 12px 24px;
+            background: var(--dark);
+            border: 2px solid #4a5568;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tab.active { background: var(--primary); border-color: var(--primary); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .method-selector { display: flex; gap: 10px; flex-wrap: wrap; }
+        .method-btn {
+            padding: 10px 20px;
+            background: var(--dark);
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .method-btn.active { background: var(--primary); color: white; }
+        .payload-examples { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px; }
+        .example-card {
+            background: var(--dark);
+            padding: 20px;
+            border: 2px solid #4a5568;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .example-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+        footer { background: var(--dark); border-top: 2px solid #4a5568; text-align: center; padding: 30px 20px; margin-top: 60px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🔗 Webhook Tester</h1>
+        <p>Generate curl commands & test webhook payloads</p>
+    </header>
+
+    <div class="container">
+        <div class="section">
+            <h2>⚡ Quick Webhook Test</h2>
+            <p style="margin-bottom: 20px; color: #cbd5e0;">For live webhook testing, use <a href="https://webhook.site" target="_blank" style="color: var(--primary);">webhook.site</a> or <a href="https://requestbin.com" target="_blank" style="color: var(--primary);">requestbin.com</a></p>
+
+            <div class="input-group">
+                <label for="webhookUrl">Webhook URL</label>
+                <input type="url" id="webhookUrl" placeholder="https://webhook.site/your-unique-id">
+            </div>
+
+            <div class="input-group">
+                <label>HTTP Method</label>
+                <div class="method-selector">
+                    <button class="method-btn active" onclick="selectMethod('POST')">POST</button>
+                    <button class="method-btn" onclick="selectMethod('GET')">GET</button>
+                    <button class="method-btn" onclick="selectMethod('PUT')">PUT</button>
+                    <button class="method-btn" onclick="selectMethod('DELETE')">DELETE</button>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="payload">Payload (JSON)</label>
+                <textarea id="payload" rows="10" placeholder='{\n  "event": "test",\n  "data": "example"\n}'></textarea>
+            </div>
+
+            <button onclick="generateCurl()">Generate curl Command</button>
+            <button onclick="formatJSON()">Format JSON</button>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('curl')">curl Command</div>
+            <div class="tab" onclick="switchTab('javascript')">JavaScript</div>
+            <div class="tab" onclick="switchTab('python')">Python</div>
+            <div class="tab" onclick="switchTab('examples')">Examples</div>
+        </div>
+
+        <div id="curl" class="tab-content active">
+            <div class="section">
+                <h2>📋 curl Command</h2>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyCode('curlCode')">Copy</button>
+                    <pre id="curlCode">// Generated curl command will appear here</pre>
+                </div>
+            </div>
+        </div>
+
+        <div id="javascript" class="tab-content">
+            <div class="section">
+                <h2>📋 JavaScript (fetch)</h2>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyCode('jsCode')">Copy</button>
+                    <pre id="jsCode">// Generated JavaScript will appear here</pre>
+                </div>
+            </div>
+        </div>
+
+        <div id="python" class="tab-content">
+            <div class="section">
+                <h2>📋 Python (requests)</h2>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyCode('pythonCode')">Copy</button>
+                    <pre id="pythonCode"># Generated Python will appear here</pre>
+                </div>
+            </div>
+        </div>
+
+        <div id="examples" class="tab-content">
+            <div class="section">
+                <h2>📦 Payload Examples</h2>
+                <div class="payload-examples">
+                    <div class="example-card" onclick="loadExample('stripe')">
+                        <h3>💳 Stripe Payment</h3>
+                        <p style="color: #a0aec0;">Payment succeeded event</p>
+                    </div>
+                    <div class="example-card" onclick="loadExample('github')">
+                        <h3>🐙 GitHub Push</h3>
+                        <p style="color: #a0aec0;">Repository push event</p>
+                    </div>
+                    <div class="example-card" onclick="loadExample('slack')">
+                        <h3>💬 Slack Message</h3>
+                        <p style="color: #a0aec0;">Incoming webhook</p>
+                    </div>
+                    <div class="example-card" onclick="loadExample('custom')">
+                        <h3>🔧 Custom Event</h3>
+                        <p style="color: #a0aec0;">Generic webhook</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p><strong>Built by <a href="https://turtles-ai-lab.github.io/Turtles-AI-Lab/" target="_blank" style="color: var(--primary);">Turtles AI Lab</a></strong></p>
+        <p style="margin-top: 10px;"><a href="https://github.com/Turtles-AI-Lab/webhook-tester" style="color: var(--primary);">View on GitHub</a></p>
+    </footer>
+
+    <script>
+        let currentMethod = 'POST';
+
+        const examples = {
+            stripe: {
+                event: 'payment_intent.succeeded',
+                data: {
+                    id: 'pi_1234567890',
+                    amount: 5000,
+                    currency: 'usd',
+                    status: 'succeeded'
+                }
+            },
+            github: {
+                ref: 'refs/heads/main',
+                commits: [{
+                    id: 'abc123',
+                    message: 'Update README',
+                    author: { name: 'Developer', email: 'dev@example.com' }
+                }]
+            },
+            slack: {
+                text: 'Hello from webhook!',
+                username: 'Webhook Bot',
+                icon_emoji: ':robot_face:'
+            },
+            custom: {
+                event: 'custom.event',
+                timestamp: new Date().toISOString(),
+                data: { message: 'Custom webhook payload' }
+            }
+        };
+
+        function selectMethod(method) {
+            currentMethod = method;
+            document.querySelectorAll('.method-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            generateCurl();
+        }
+
+        function loadExample(type) {
+            document.getElementById('payload').value = JSON.stringify(examples[type], null, 2);
+            switchTab('curl');
+            generateCurl();
+        }
+
+        function formatJSON() {
+            try {
+                const payload = document.getElementById('payload').value;
+                const formatted = JSON.stringify(JSON.parse(payload), null, 2);
+                document.getElementById('payload').value = formatted;
+            } catch (e) {
+                alert('Invalid JSON: ' + e.message);
+            }
+        }
+
+        function generateCurl() {
+            const url = document.getElementById('webhookUrl').value || 'https://webhook.site/your-unique-id';
+            const payload = document.getElementById('payload').value || '{}';
+
+            // curl
+            const curlCmd = `curl -X ${currentMethod} '${url}' \\
+  -H 'Content-Type: application/json' \\
+  -d '${payload.replace(/'/g, "'\\''")}'`;
+            document.getElementById('curlCode').textContent = curlCmd;
+
+            // JavaScript
+            const jsCode = `fetch('${url}', {
+  method: '${currentMethod}',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify(${payload})
+})
+  .then(response => response.json())
+  .then(data => console.log('Success:', data))
+  .catch((error) => console.error('Error:', error));`;
+            document.getElementById('jsCode').textContent = jsCode;
+
+            // Python
+            const pythonCode = `import requests
+import json
+
+url = '${url}'
+payload = ${payload}
+
+response = requests.${currentMethod.toLowerCase()}(
+    url,
+    json=payload,
+    headers={'Content-Type': 'application/json'}
+)
+
+print('Status:', response.status_code)
+print('Response:', response.json())`;
+            document.getElementById('pythonCode').textContent = pythonCode;
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function copyCode(id) {
+            const code = document.getElementById(id).textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                event.target.textContent = 'Copied!';
+                setTimeout(() => event.target.textContent = 'Copy', 2000);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('payload').value = JSON.stringify(examples.custom, null, 2);
+            generateCurl();
+        });
+    </script>
+</body>
+</html>
