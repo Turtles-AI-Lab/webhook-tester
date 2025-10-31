@@ -1,5 +1,13 @@
 # 🔗 Webhook Tester
 
+
+![GitHub stars](https://img.shields.io/github/stars/Turtles-AI-Lab/webhook-tester?style=social)
+![GitHub forks](https://img.shields.io/github/forks/Turtles-AI-Lab/webhook-tester?style=social)
+![GitHub issues](https://img.shields.io/github/issues/Turtles-AI-Lab/webhook-tester)
+![GitHub license](https://img.shields.io/github/license/Turtles-AI-Lab/webhook-tester)
+![GitHub last commit](https://img.shields.io/github/last-commit/Turtles-AI-Lab/webhook-tester)
+
+
 Test and debug webhooks with ease. Generate curl commands, view payload examples, and debug webhook integrations.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
